@@ -52,21 +52,23 @@ def chunk_text(text: str, size: int, overlap: int) -> list[str]:
 
 
 def build_chunks(papers: list[dict]) -> list[dict]:
+    # One chunk per paper. Abstracts are ~150-250 words, so splitting them
+    # into overlapping windows only creates near-duplicate vectors that hurt
+    # precision and inflate the index. Keeping one chunk per paper keeps each
+    # paper a single retrieval unit and makes precision@k meaningful.
     chunks = []
     for p in papers:
-        # title + abstract treated as one document, chunked
-        doc = f"Title: {p['title']}\nAbstract: {p['abstract']}"
-        for ci, c in enumerate(chunk_text(doc, cfg.CHUNK_SIZE, cfg.CHUNK_OVERLAP)):
-            chunks.append({
-                "chunk_id": f"{p['arxiv_id']}__{ci}",
-                "arxiv_id": p["arxiv_id"],
-                "title": p["title"],
-                "text": c,
-                "authors": p["authors"],
-                "published": p["published"],
-                "pdf_url": p["pdf_url"],
-                "categories": p["categories"],
-            })
+        text = f"Title: {p['title']}\nAbstract: {p['abstract']}"
+        chunks.append({
+            "chunk_id": f"{p['arxiv_id']}__0",
+            "arxiv_id": p["arxiv_id"],
+            "title": p["title"],
+            "text": text,
+            "authors": p["authors"],
+            "published": p["published"],
+            "pdf_url": p["pdf_url"],
+            "categories": p["categories"],
+        })
     return chunks
 
 

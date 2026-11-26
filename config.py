@@ -1,6 +1,9 @@
 """Shared configuration for PaperMind (ArXiv RAG chatbot)."""
 from __future__ import annotations
 
+import torch
+torch.set_num_threads(1)
+
 import os
 from pathlib import Path
 
@@ -32,7 +35,9 @@ HF_TOKEN = os.getenv("HF_TOKEN", "")
 HF_MODEL = os.getenv("HF_MODEL", "mistralai/Mistral-7B-Instruct-v0.3")
 
 TOP_K = 8
-RELEVANCE_THRESHOLD = -9.5  # cross-encoder logit; below = not relevant
+RELEVANCE_THRESHOLD = 0.0   # cross-encoder logit; above = relevant (fast path)
+AMBIGUOUS_LOW = -2.0        # below this -> refuse without LLM grading
+AMBIGUOUS_HIGH = 2.0       # above this -> accept without LLM grading
 RERANK_TOP_N = 5
 
 for d in (DATA_DIR, INDEX_DIR):

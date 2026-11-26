@@ -50,42 +50,67 @@ class RagPipeline:
         except Exception:
             return question
 
-    def run(self, question: str, history: list[dict] | None = None,
-            top_k: int = cfg.TOP_K, rerank: bool = True) -> RagResult:
+    def retrieve_and_decide(self, question: str, history: list[dict] | None = None,
+                           top_k: int = cfg.TOP_K, rerank: bool = True):
+        """Run retrieval + CRAG grading without generating. Returns (chunks, scores, query_used, rewritten, refused)."""
         history = history or []
         original = question
         rewritten = False
-
-        # 1. query rewriting for follow-ups
         query = question
         if history:
             query = self._rewrite(question, history)
             rewritten = (query != question)
 
-        # 2. retrieve + grade
         chunks, scores = self.retriever.retrieve_with_scores(query, top_k=top_k, rerank=rerank)
-        relevant = self.retriever.is_relevant(scores, cfg.RELEVANCE_THRESHOLD)
+        max_score = max(scores) if scores else float("-inf")
 
-        # 3. CRAG: if not relevant, rewrite query and retry once
+        def llm_grade(chs):
+            if not chs:
+                return False
+            ctx = chs[0]["text"][:600]
+            prompt = ("Is the following passage relevant to answering the question? "
+                      "Answer only 'yes' or 'no'.\n\nQuestion: " + question +
+                      "\n\nPassage: " + ctx)
+            try:
+                out = self.llm.generate(prompt, []).lower()
+                return out.strip().startswith("yes")
+            except Exception:
+                return max_score >= cfg.RELEVANCE_THRESHOLD
+
+        if max_score >= cfg.AMBIGUOUS_HIGH:
+            relevant = True
+        elif max_score < cfg.AMBIGUOUS_LOW:
+            relevant = False
+        else:
+            relevant = llm_grade(chunks)
+
         if not relevant and not rewritten:
-            # try a keyword-focused rewrite via LLM
             alt = self._rewrite(question + " (rephrase for keyword search)", [])
             if alt and alt != query:
                 chunks2, scores2 = self.retriever.retrieve_with_scores(alt, top_k=top_k, rerank=rerank)
-                if self.retriever.is_relevant(scores2, cfg.RELEVANCE_THRESHOLD):
-                    chunks, scores = chunks2, scores2
-                    query = alt
-                    rewritten = True
-                    relevant = True
+                ms2 = max(scores2) if scores2 else float("-inf")
+                if ms2 >= cfg.AMBIGUOUS_HIGH or (cfg.AMBIGUOUS_LOW <= ms2 < cfg.AMBIGUOUS_HIGH and llm_grade(chunks2)):
+                    chunks, scores, query = chunks2, scores2, alt
+                    rewritten, relevant = True, True
+                elif ms2 >= cfg.RELEVANCE_THRESHOLD:
+                    chunks, scores, query = chunks2, scores2, alt
+                    rewritten, relevant = True, True
 
-        # 4. refuse if still not relevant
-        if not relevant:
+        refused = not relevant
+        return chunks, scores, query, rewritten, refused
+
+    def run(self, question: str, history: list[dict] | None = None,
+            top_k: int = cfg.TOP_K, rerank: bool = True) -> RagResult:
+        history = history or []
+        chunks, scores, query, rewritten, refused = self.retrieve_and_decide(
+            question, history=history, top_k=top_k, rerank=rerank)
+
+        if refused:
             return RagResult(answer=REFUSAL, chunks=chunks, scores=scores,
-                            query_used=query, original_query=original,
+                            query_used=query, original_query=question,
                             rewritten=rewritten, refused=True)
 
-        # 5. generate
         answer = self.llm.generate(question, chunks)
         return RagResult(answer=answer, chunks=chunks, scores=scores,
-                        query_used=query, original_query=original,
+                        query_used=query, original_query=question,
                         rewritten=rewritten, refused=False)

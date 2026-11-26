@@ -1,4 +1,4 @@
-"""PaperMind — Streamlit RAG chatbot over recent ArXiv AI/ML papers (with CRAG)."""
+"""PaperMind - Streamlit RAG chatbot over recent ArXiv AI/ML papers (with CRAG)."""
 from __future__ import annotations
 
 import streamlit as st
@@ -27,14 +27,14 @@ llm = pipeline.llm
 
 with st.sidebar:
     st.subheader("Settings")
-    st.write(f"LLM mode: **{llm.mode}**")
-    st.write(f"Index size: **{len(pipeline.retriever.chunks)} chunks**")
+    st.write(f"LLM mode: {llm.mode}")
+    st.write(f"Index size: {len(pipeline.retriever.chunks)} chunks")
     top_k = st.slider("Top-K retrieval", 4, 16, cfg.TOP_K)
     rerank = st.toggle("Cross-encoder rerank", value=True)
     show_sources = st.toggle("Show sources", value=True)
     show_debug = st.toggle("Show retrieval debug", value=False)
     st.divider()
-    st.markdown("**Example questions**")
+    st.markdown("Example questions")
     examples = [
         "What is retrieval augmented generation?",
         "How do vision-language models work?",
@@ -69,23 +69,38 @@ if prompt:
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("Retrieving + (corrective) generating..."):
-            res = pipeline.run(prompt, history=history, top_k=top_k, rerank=rerank)
-        st.markdown(res.answer)
+        with st.spinner("Retrieving..."):
+            chunks, scores, query_used, rewritten, refused = pipeline.retrieve_and_decide(
+                prompt, history=history, top_k=top_k, rerank=rerank)
         sources = [
             {"arxiv_id": c["arxiv_id"], "title": c["title"], "pdf_url": c["pdf_url"]}
-            for c in res.chunks
+            for c in chunks
         ]
-        if show_sources and not res.refused:
+        if refused:
+            answer = ("I don't have enough evidence in the indexed papers to answer "
+                      "that confidently. Try rephrasing, or ask about a topic "
+                      "covered by the corpus (recent ArXiv AI/ML papers).")
+            st.markdown(answer)
+        else:
+            placeholder = st.empty()
+            acc = ""
+            for tok in pipeline.llm.stream(prompt, chunks):
+                acc += tok
+                placeholder.markdown(acc)
+            answer = acc.strip()
+            if not answer:
+                answer = pipeline.llm.generate(prompt, chunks)
+                placeholder.markdown(answer)
+        if show_sources and not refused:
             with st.expander("Sources"):
-                for s in sources:
-                    st.markdown(f"- [{s['arxiv_id']}] [{s['title']}]({s['pdf_url']})")
-        debug = (f"query_used: {res.query_used}\n"
-                 f"rewritten: {res.rewritten}\n"
-                 f"refused: {res.refused}\n"
-                 f"scores: {[round(s,3) for s in res.scores]}")
+                for src in sources:
+                    st.markdown(f"- [{src['arxiv_id']}] [{src['title']}]({src['pdf_url']})")
+        debug = (f"query_used: {query_used}\n"
+                 f"rewritten: {rewritten}\n"
+                 f"refused: {refused}\n"
+                 f"scores: {[round(sc, 3) for sc in scores]}")
         if show_debug:
             st.code(debug, language="text")
     st.session_state.messages.append({
-        "role": "assistant", "content": res.answer, "sources": sources, "debug": debug,
+        "role": "assistant", "content": answer, "sources": sources, "debug": debug,
     })

@@ -15,7 +15,7 @@ Ask a question and PaperMind retrieves relevant chunks from ~60 recent papers, r
 - Grounded generation: a strict system prompt forces answers from the retrieved context with inline [arxiv_id] citations.
 - Corrective RAG (CRAG): grades retrieved chunks by relevance; if the top score is too low, rewrites the query and re-retrieves once; if still low, refuses. Follow-up questions get rewritten into standalone search queries using conversation history.
 - Provider-agnostic LLM: tries Groq, then HuggingFace Inference, then a local flan-t5-base model, then retrieval-only mode. Ships runnable with zero API keys.
-- Eval harness: 10 hand-written Q&A pairs with Hit@k, MRR, and Precision@k.
+- Eval harness: 15 hand-written Q&A pairs with Hit@k, MRR, and Precision@k.
 - Streamlit UI with chat, source cards, a settings sidebar, and example questions.
 - Reproducible: one command (python ingest.py) rebuilds the whole index.
 
@@ -77,7 +77,7 @@ python eval.py
 }
 ```
 
-The eval set (data/eval.json) has 10 hand-written questions, each tied to a specific paper, measuring whether the retriever surfaces the gold document. CRAG refused 0 of 10 in-domain questions and 2 of 2 tested out-of-domain questions, with no hallucinations.
+The eval set (data/eval.json) has 15 hand-written questions, each tied to a specific paper, measuring whether the retriever surfaces the gold document. Retrieval: Hit@1 = 1.0, MRR = 1.0. CRAG refused 0 of 15 in-domain questions and 10 of 10 out-of-domain questions, with no hallucinations. Citation hit rate: 1.0. Refusal accuracy: 1.0.
 
 ## Tech stack
 

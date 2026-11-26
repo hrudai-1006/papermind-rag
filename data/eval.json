@@ -1,62 +1,92 @@
 [
   {
-    "question": "What empirical study examines how much coding agents over-edit and why, looking at unneeded edits in repository-level agent patches?",
+    "question": "How can camera-controlled video generation move the camera around an object when camera parameters are scale-ambiguous and depth-based methods break under large viewpoint changes?",
     "gold_arxiv_ids": [
-      "2611.34875v1"
+      "2611.34944v1"
     ]
   },
   {
-    "question": "What is a survey covering security, privacy, and ethics of large language models in telecommunications?",
+    "question": "How can video editors gain new editing capabilities like action or expression changes without collecting paired source-edited videos?",
     "gold_arxiv_ids": [
-      "2611.34868v1"
+      "2611.34941v1"
     ]
   },
   {
-    "question": "What benchmark is knowledge-centric for professional deep research agents?",
+    "question": "What is the computational complexity of finding an optimal tokeniser, and is it in APX?",
     "gold_arxiv_ids": [
-      "2611.34852v1"
+      "2611.34938v1"
     ]
   },
   {
-    "question": "What method proposes self-structuring learning through question answering called knowledge-base gradient descent?",
+    "question": "Does generating a helper image improve visual reasoning in multimodal models, or does it hurt accuracy?",
     "gold_arxiv_ids": [
-      "2611.34841v1"
+      "2611.34935v1"
     ]
   },
   {
-    "question": "What protocol and benchmark audit LLM model selection for routeability before routing?",
-    "gold_arxiv_ids": [
-      "2611.34825v1"
-    ]
-  },
-  {
-    "question": "What benchmark tests whether language models know the foundations of early-grade literacy?",
-    "gold_arxiv_ids": [
-      "2611.34823v1"
-    ]
-  },
-  {
-    "question": "What finding shows coding agents are stronger visual reasoners than video models?",
-    "gold_arxiv_ids": [
-      "2611.34813v1"
-    ]
-  },
-  {
-    "question": "What work studies Barron smoothness for layers in deep neural networks?",
-    "gold_arxiv_ids": [
-      "2611.34805v1"
-    ]
-  },
-  {
-    "question": "What approach generates diverse alternative reasoning traces for hard math problems?",
+    "question": "How can rejected reasoning traces be mined to recover more hard math problems for post-training LLMs?",
     "gold_arxiv_ids": [
       "2611.34928v1"
     ]
   },
   {
-    "question": "What is the Mixture-of-Loops Transformer?",
+    "question": "How does a Mixture-of-Loops Transformer reuse keys and values across loops to improve the expressivity-efficiency tradeoff?",
     "gold_arxiv_ids": [
       "2611.34923v1"
+    ]
+  },
+  {
+    "question": "Why do 3D tracklets lifted with estimated depth fail to transfer from simulation to real videos for deformable object material estimation, while 2D optical flow tracklets succeed?",
+    "gold_arxiv_ids": [
+      "2611.34894v1"
+    ]
+  },
+  {
+    "question": "Do coding agents over-edit compared to developers, and are the extra edits actually needed?",
+    "gold_arxiv_ids": [
+      "2611.34875v1"
+    ]
+  },
+  {
+    "question": "What privacy, security, and ethical risks arise when LLMs are deployed in telecommunications?",
+    "gold_arxiv_ids": [
+      "2611.34868v1"
+    ]
+  },
+  {
+    "question": "How can a knowledge base be automatically structured using questions and expected answers as guidance?",
+    "gold_arxiv_ids": [
+      "2611.34841v1"
+    ]
+  },
+  {
+    "question": "Do language models possess the linguistic knowledge needed for early-grade literacy in underrepresented languages like Kiswahili?",
+    "gold_arxiv_ids": [
+      "2611.34823v1"
+    ]
+  },
+  {
+    "question": "Are coding agents better visual reasoners than video generation models when both receive the same first frame and prompt?",
+    "gold_arxiv_ids": [
+      "2611.34813v1"
+    ]
+  },
+  {
+    "question": "How can approximation errors in deep neural networks be bounded using Barron smoothness across layers?",
+    "gold_arxiv_ids": [
+      "2611.34805v1"
+    ]
+  },
+  {
+    "question": "How do training objective and architecture shape epistemic uncertainty in JEPA versus RSSM world models?",
+    "gold_arxiv_ids": [
+      "2611.34830v1"
+    ]
+  },
+  {
+    "question": "How can relational safety in LLMs be measured beyond refusal compliance, including vulnerability awareness?",
+    "gold_arxiv_ids": [
+      "2611.34819v1"
     ]
   }
 ]

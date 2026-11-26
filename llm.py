@@ -15,9 +15,11 @@ Be concise, accurate, and never fabricate citations."""
 
 def build_prompt(question: str, chunks: list[dict]) -> str:
     ctx = "\n\n".join(
-        f"[{c['arxiv_id']}] {c['title']}\n{c['text']}" for c in chunks
+        f"[{c['arxiv_id']}] {c['title']}: {c['text']}" for c in chunks
     )
-    return f"Context:\n{ctx}\n\nQuestion: {question}\n\nAnswer:"
+    return ("Answer the question using only the context below. "
+            "Include the arxiv id of the source in brackets.\n\n"
+            f"Context:\n{ctx}\n\nQuestion: {question}\nAnswer:")
 
 
 class LLM:
@@ -45,6 +47,14 @@ class LLM:
         except Exception:
             self.mode = "retrieval-only"
 
+    def _ensure_citations(self, answer: str, chunks: list[dict]) -> str:
+        ids = [c["arxiv_id"] for c in chunks]
+        if any(i in answer for i in ids):
+            return answer
+        # append a sources line so citations are always present
+        src = ", ".join(f"[{i}]" for i in ids[:3])
+        return answer.rstrip() + f"\n\nSources: {src}"
+
     def generate(self, question: str, chunks: list[dict]) -> str:
         prompt = build_prompt(question, chunks)
         if self.mode == "groq":
@@ -57,7 +67,7 @@ class LLM:
                 temperature=0.2,
                 max_tokens=512,
             )
-            return resp.choices[0].message.content.strip()
+            return self._ensure_citations(resp.choices[0].message.content.strip(), chunks)
         if self.mode == "hf":
             import requests
             url = f"https://api-inference.huggingface.co/models/{cfg.HF_MODEL}"
@@ -69,13 +79,26 @@ class LLM:
             )
             data = r.json()
             if isinstance(data, list) and data:
-                return data[0].get("generated_text", "").strip()
+                return self._ensure_citations(data[0].get("generated_text", "").strip(), chunks)
             return str(data)
         if self.mode == "local":
-            inputs = self._tok(SYSTEM_PROMPT + "\n" + prompt, return_tensors="pt",
-                               truncation=True, max_length=512)
-            out_ids = self._local.generate(**inputs, max_new_tokens=256, do_sample=False)
-            return self._tok.decode(out_ids[0], skip_special_tokens=True).strip()
+            # flan-t5 works best with a short, focused prompt on the top chunk
+            top = chunks[:1]
+            ctx = " ".join(f"{c['title']}. {c['text']}" for c in top)
+            flan_prompt = f"answer the question based on the context. question: {question} context: {ctx}"
+            inputs = self._tok(flan_prompt, return_tensors="pt", truncation=True, max_length=512)
+            out_ids = self._local.generate(**inputs, max_new_tokens=128, do_sample=False,
+                                          num_beams=2)
+            ans = self._tok.decode(out_ids[0], skip_special_tokens=True).strip()
+            if not ans or len(ans) < 8 or ans.lower().startswith("title:"):
+                # fall back to an extractive snippet from the top chunk
+                snippet = top[0]["text"] if top else ""
+                # strip the "Title: ... Abstract:" prefix for readability
+                if "Abstract:" in snippet:
+                    snippet = snippet.split("Abstract:", 1)[-1].strip()
+                sentences = [x.strip() for x in snippet.replace("\n", " ").split(".") if x.strip()]
+                ans = ". ".join(sentences[:2]) + "." if sentences else snippet[:280]
+            return self._ensure_citations(ans, chunks)
         # retrieval-only: return a stitched answer from top chunks
         lines = ["(No LLM API key configured — showing retrieved evidence.)\n"]
         for c in chunks[:3]:
