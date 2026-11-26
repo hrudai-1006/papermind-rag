@@ -38,8 +38,9 @@ class LLM:
             return
         # local fallback
         try:
-            from transformers import pipeline
-            self._local = pipeline("text2text-generation", model=cfg.LOCAL_LLM)
+            from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+            self._tok = AutoTokenizer.from_pretrained(cfg.LOCAL_LLM)
+            self._local = AutoModelForSeq2SeqLM.from_pretrained(cfg.LOCAL_LLM)
             self.mode = "local"
         except Exception:
             self.mode = "retrieval-only"
@@ -71,8 +72,10 @@ class LLM:
                 return data[0].get("generated_text", "").strip()
             return str(data)
         if self.mode == "local":
-            out = self._local(SYSTEM_PROMPT + "\n" + prompt, max_new_tokens=300, do_sample=False)
-            return out[0]["generated_text"].strip()
+            inputs = self._tok(SYSTEM_PROMPT + "\n" + prompt, return_tensors="pt",
+                               truncation=True, max_length=512)
+            out_ids = self._local.generate(**inputs, max_new_tokens=256, do_sample=False)
+            return self._tok.decode(out_ids[0], skip_special_tokens=True).strip()
         # retrieval-only: return a stitched answer from top chunks
         lines = ["(No LLM API key configured — showing retrieved evidence.)\n"]
         for c in chunks[:3]:

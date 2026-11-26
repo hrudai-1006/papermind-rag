@@ -9,6 +9,8 @@ deployable Streamlit UI.
 > **Live demo:** runs with **no API key** (local fallback). Add a free Groq key
 > for high-quality answers.
 
+![PaperMind UI](assets/screenshot.jpg)
+
 ## ✨ Features
 
 - **Hybrid retrieval** — BM25 (sparse) + dense (FAISS cosine) fused with
@@ -17,11 +19,16 @@ deployable Streamlit UI.
   candidates for precision.
 - **Grounded generation** — strict system prompt forces answers from context
   with inline `[arxiv_id]` citations; refuses when evidence is weak.
+- **Corrective RAG (CRAG)** — grades retrieved chunks; on low relevance,
+  rewrites the query and re-retrieves; refuses out-of-domain questions instead of
+  hallucinating. Follow-up questions are rewritten into standalone queries.
 - **Provider-agnostic LLM** — Groq (free tier) → HuggingFace Inference →
   local `flan-t5-base` fallback → retrieval-only mode. Ships runnable with
   zero keys.
 - **Eval harness** — 10 hand-written Q&A pairs with Hit@k, MRR, Precision@k.
   Current results: **Hit@3 = 1.0, Hit@5 = 1.0, MRR = 1.0, P@5 = 0.34**.
+  CRAG refused 0/10 in-domain questions and 2/2 tested out-of-domain
+  questions (no hallucinations).
 - **Streamlit UI** — chat, source cards, settings sidebar, example questions.
 - **Reproducible** — one command (`python ingest.py`) rebuilds the whole index.
 
@@ -66,6 +73,19 @@ Optional: add a free Groq key to `.env` for high-quality answers:
 ```
 GROQ_API_KEY=gsk_...
 ```
+
+## 🌐 Live Demo
+
+**Try it:** deploy in one click.
+
+- **Streamlit Cloud** (free): fork this repo → [share.streamlit.io](https://share.streamlit.io) →
+  "New app" → select `app.py`. No secrets needed (runs in retrieval-only mode);
+  add `GROQ_API_KEY` in the app's Secrets for generated answers.
+- **HuggingFace Spaces** (free, Docker): create a Space (SDK: Streamlit), push this
+  repo, and add `GROQ_API_KEY` as a Space secret.
+
+A live link is the single highest-ROI addition to a portfolio repo — recruiters
+click before they read.
 
 ## 📊 Evaluation
 

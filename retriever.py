@@ -19,7 +19,6 @@ class Retriever:
         self.index = faiss.read_index(str(cfg.FAISS_INDEX))
         self.embedder = SentenceTransformer(cfg.EMBED_MODEL)
         self.reranker = None  # lazy
-        # BM25 corpus
         tokenized = [self._tok(c["text"]) for c in self.chunks]
         self.bm25 = BM25Okapi(tokenized)
 
@@ -47,24 +46,39 @@ class Retriever:
         return sorted(agg.items(), key=lambda x: x[1], reverse=True)
 
     def retrieve(self, query: str, top_k: int = cfg.TOP_K, rerank: bool = True) -> list[dict]:
+        chunks, _ = self.retrieve_with_scores(query, top_k=top_k, rerank=rerank)
+        return chunks
+
+    def retrieve_with_scores(self, query: str, top_k: int = cfg.TOP_K, rerank: bool = True) \
+            -> tuple[list[dict], list[float]]:
+        """Return (chunks, relevance_scores). Scores are cross-encoder logits if reranked."""
         dense = self._dense(query, top_k * 2)
         sparse = self._sparse(query, top_k * 2)
         fused = self._rrf([dense, sparse])[: top_k * 2]
 
         cands = [self.chunks[i] for i, _ in fused]
+        scores = [s for _, s in fused]
         if rerank and cands:
             if self.reranker is None:
                 self.reranker = CrossEncoder(cfg.RERANK_MODEL)
             pairs = [(query, c["text"]) for c in cands]
-            scores = self.reranker.predict(pairs)
-            order = sorted(range(len(cands)), key=lambda i: scores[i], reverse=True)
+            ce_scores = [float(x) for x in self.reranker.predict(pairs)]
+            order = sorted(range(len(cands)), key=lambda i: ce_scores[i], reverse=True)
             cands = [cands[i] for i in order[:cfg.RERANK_TOP_N]]
+            scores = [ce_scores[i] for i in order[:cfg.RERANK_TOP_N]]
         else:
             cands = cands[:cfg.RERANK_TOP_N]
-        return cands
+            scores = scores[:cfg.RERANK_TOP_N]
+        return cands, scores
+
+    def is_relevant(self, scores: list[float], threshold: float = 0.0) -> bool:
+        if not scores:
+            return False
+        return max(scores) >= threshold
 
 
 if __name__ == "__main__":
     r = Retriever()
-    for c in r.retrieve("What is retrieval augmented generation?"):
-        print(c["arxiv_id"], "|", c["title"][:60])
+    chunks, scores = r.retrieve_with_scores("What is retrieval augmented generation?")
+    for c, s in zip(chunks, scores):
+        print(f"{s:+.3f}  {c['arxiv_id']} | {c['title'][:60]}")

@@ -32,6 +32,7 @@ HF_TOKEN = os.getenv("HF_TOKEN", "")
 HF_MODEL = os.getenv("HF_MODEL", "mistralai/Mistral-7B-Instruct-v0.3")
 
 TOP_K = 8
+RELEVANCE_THRESHOLD = -9.5  # cross-encoder logit; below = not relevant
 RERANK_TOP_N = 5
 
 for d in (DATA_DIR, INDEX_DIR):
