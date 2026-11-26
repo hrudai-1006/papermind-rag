@@ -1,0 +1,10 @@
+streamlit>=1.30
+sentence-transformers>=2.5
+faiss-cpu>=1.7
+rank-bm25>=0.2
+arxiv>=2.0
+python-dotenv>=1.0
+groq>=0.5
+huggingface_hub>=0.20
+transformers>=4.38
+tqdm>=4.66

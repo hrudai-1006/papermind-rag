@@ -1,0 +1,62 @@
+[
+  {
+    "question": "What empirical study examines how much coding agents over-edit and why, looking at unneeded edits in repository-level agent patches?",
+    "gold_arxiv_ids": [
+      "2611.34875v1"
+    ]
+  },
+  {
+    "question": "What is a survey covering security, privacy, and ethics of large language models in telecommunications?",
+    "gold_arxiv_ids": [
+      "2611.34868v1"
+    ]
+  },
+  {
+    "question": "What benchmark is knowledge-centric for professional deep research agents?",
+    "gold_arxiv_ids": [
+      "2611.34852v1"
+    ]
+  },
+  {
+    "question": "What method proposes self-structuring learning through question answering called knowledge-base gradient descent?",
+    "gold_arxiv_ids": [
+      "2611.34841v1"
+    ]
+  },
+  {
+    "question": "What protocol and benchmark audit LLM model selection for routeability before routing?",
+    "gold_arxiv_ids": [
+      "2611.34825v1"
+    ]
+  },
+  {
+    "question": "What benchmark tests whether language models know the foundations of early-grade literacy?",
+    "gold_arxiv_ids": [
+      "2611.34823v1"
+    ]
+  },
+  {
+    "question": "What finding shows coding agents are stronger visual reasoners than video models?",
+    "gold_arxiv_ids": [
+      "2611.34813v1"
+    ]
+  },
+  {
+    "question": "What work studies Barron smoothness for layers in deep neural networks?",
+    "gold_arxiv_ids": [
+      "2611.34805v1"
+    ]
+  },
+  {
+    "question": "What approach generates diverse alternative reasoning traces for hard math problems?",
+    "gold_arxiv_ids": [
+      "2611.34928v1"
+    ]
+  },
+  {
+    "question": "What is the Mixture-of-Loops Transformer?",
+    "gold_arxiv_ids": [
+      "2611.34923v1"
+    ]
+  }
+]
