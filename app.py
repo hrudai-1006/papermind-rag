@@ -9,9 +9,9 @@ from rag import RagPipeline
 from retriever import Retriever
 
 
-st.set_page_config(page_title="PaperMind — ArXiv RAG", page_icon="📄", layout="wide")
+st.set_page_config(page_title="PaperMind - ArXiv RAG", layout="wide")
 
-st.title("📄 PaperMind")
+st.title("PaperMind")
 st.caption("CRAG chatbot over recent ArXiv AI/ML papers (cs.AI, cs.LG, cs.CL, cs.CV). "
            "Hybrid retrieval (BM25 + dense) + cross-encoder rerank + corrective "
            "retrieval + grounded citations.")
