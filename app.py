@@ -70,8 +70,14 @@ if prompt:
 
     with st.chat_message("assistant"):
         with st.spinner("Retrieving..."):
-            chunks, scores, query_used, rewritten, refused = pipeline.retrieve_and_decide(
-                prompt, history=history, top_k=top_k, rerank=rerank)
+            try:
+                chunks, scores, query_used, rewritten, refused = pipeline.retrieve_and_decide(
+                    prompt, history=history, top_k=top_k, rerank=rerank)
+            except AttributeError:
+                # Fallback for older deployed copies of rag.py
+                res = pipeline.run(prompt, history=history, top_k=top_k, rerank=rerank)
+                chunks, scores = res.chunks, res.scores
+                query_used, rewritten, refused = res.query_used, res.rewritten, res.refused
         sources = [
             {"arxiv_id": c["arxiv_id"], "title": c["title"], "pdf_url": c["pdf_url"]}
             for c in chunks
@@ -84,9 +90,14 @@ if prompt:
         else:
             placeholder = st.empty()
             acc = ""
-            for tok in pipeline.llm.stream(prompt, chunks):
-                acc += tok
-                placeholder.markdown(acc)
+            try:
+                for tok in pipeline.llm.stream(prompt, chunks):
+                    acc += tok
+                    placeholder.markdown(acc)
+            except AttributeError:
+                answer = pipeline.llm.generate(prompt, chunks)
+                placeholder.markdown(answer)
+                acc = answer
             answer = acc.strip()
             if not answer:
                 answer = pipeline.llm.generate(prompt, chunks)
