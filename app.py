@@ -36,11 +36,11 @@ with st.sidebar:
     st.divider()
     st.markdown("Example questions")
     examples = [
-        "What is retrieval augmented generation?",
-        "How do vision-language models work?",
-        "What are recent advances in efficient LLM training?",
-        "Explain diffusion models for image generation.",
-        "What is chain-of-thought prompting?",
+        "How can camera-controlled video generation move the camera around an object?",
+        "Do coding agents over-edit compared to developers?",
+        "What privacy and security risks arise when LLMs are deployed in telecom?",
+        "How can rejected reasoning traces be mined for hard math problems?",
+        "Are coding agents better visual reasoners than video models?",
     ]
     for e in examples:
         if st.button(e, use_container_width=True):
